@@ -32,7 +32,6 @@ class Sentences(object):
                 yield ['<s>'] + s.lower().split() + [r'<\s>']
 
 
-
 def main(args):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                         level=logging.INFO)
@@ -44,8 +43,6 @@ def main(args):
     sentences = Sentences()
     model = gensim.models.Word2Vec(
         size=args.dim, min_count=5, workers=16, sg=1)
-
-#    logging.log(level=logging.WARNING, msg=len(sentences))
     model.build_vocab(sentences)
     print('vocab built in {}'.format(timedelta(seconds=time()-start)))
     model.train(sentences,

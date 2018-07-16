@@ -1,6 +1,5 @@
 """ batching """
 import random
-import sys
 from collections import defaultdict
 
 from toolz.sandbox import unzip
@@ -10,8 +9,7 @@ from cytoolz import curried
 import torch
 import torch.multiprocessing as mp
 
-import importlib
-importlib.reload(sys)
+
 # Batching functions
 def coll_fn(data):
     source_lists, target_lists = unzip(data)
@@ -111,20 +109,14 @@ def pad_batch_tensorize(inputs, pad, cuda=True):
     :type inputs: List[np.ndarray]
     :rtype: TorchTensor of size (B, T, ...)
     """
-
     tensor_type = torch.cuda.LongTensor if cuda else torch.LongTensor
     batch_size = len(inputs)
     max_len = max(len(ids) for ids in inputs)
     tensor_shape = (batch_size, max_len)
-    if max_len == 0:
-        return torch.zeros(32, 2)
     tensor = tensor_type(*tensor_shape)
     tensor.fill_(pad)
-  #  print(tensor.size())
-
     for i, ids in enumerate(inputs):
-        
-        tensor[i,:len(ids)] = tensor_type(ids)
+        tensor[i, :len(ids)] = tensor_type(ids)
     return tensor
 
 @curry

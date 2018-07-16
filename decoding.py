@@ -148,8 +148,7 @@ class Extractor(object):
         ext_args = ext_meta['net_args']
         extractor = ext_cls(**ext_args)
         extractor.load_state_dict(ext_ckpt)
-        word2id = pkl.load(open(join('./abstracter_model/', 'vocab.pkl'), 'rb'))
-        #word2id = pkl.load(open(join(ext_dir, 'vocab.pkl'), 'rb'))
+        word2id = pkl.load(open(join(ext_dir, 'vocab.pkl'), 'rb'))
         self._device = torch.device('cuda' if cuda else 'cpu')
         self._net = extractor.to(self._device)
         self._word2id = word2id

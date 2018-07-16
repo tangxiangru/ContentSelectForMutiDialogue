@@ -1,12 +1,9 @@
 """ train extractor (ML)"""
 import argparse
 import json
-import sys
 import os
 from os.path import join, exists
 import pickle as pkl
-import importlib
-importlib.reload(sys)
 
 from cytoolz import compose
 
@@ -128,7 +125,7 @@ def main(args):
     # create data batcher, vocabulary
     # batcher
     with open(join(DATA_DIR, 'vocab_cnt.pkl'), 'rb') as f:
-        wc = pkl.load(f, encoding='iso-8859-1')
+        wc = pkl.load(f)
     word2id = make_vocab(wc, args.vsize)
     train_batcher, val_batcher = build_batchers(args.net_type, word2id,
                                                 args.cuda, args.debug)

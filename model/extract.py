@@ -24,10 +24,7 @@ class ConvSentEncoder(nn.Module):
         self._grad_handle = None
 
     def forward(self, input_):
-        print(input_.size())
         emb_input = self._embedding(input_)
-        emb_input = torch.unsqueeze(emb_input,1)
-        print(emb_input.size())
         conv_in = F.dropout(emb_input.transpose(1, 2),
                             self._dropout, training=self.training)
         output = torch.cat([F.relu(conv(conv_in)).max(dim=2)[0]
@@ -276,25 +273,11 @@ class PtrExtractSumm(nn.Module):
         )
 
     def forward(self, article_sents, sent_nums, target):
-       # article_sents = article_sents.to(0)
-        target = target.to(0)
         enc_out = self._encode(article_sents, sent_nums)
         bs, nt = target.size()
         d = enc_out.size(2)
-
-        a=target.long()
-        print(a.type())
-
-        print('***')
-
-        b=target.unsqueeze(2).long()
-        print(b.type())
-        print('***')
-
-        c=target.unsqueeze(2).expand(bs, nt, d).long()
-        print(c.type())
         ptr_in = torch.gather(
-            enc_out, dim=1, index=c
+            enc_out, dim=1, index=target.unsqueeze(2).expand(bs, nt, d)
         )
         output = self._extractor(enc_out, sent_nums, ptr_in)
         return output
