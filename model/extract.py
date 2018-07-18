@@ -16,7 +16,7 @@ class ConvSentEncoder(nn.Module):
     w/ max-over-time pooling, [3, 4, 5] kernel sizes, ReLU activation
     """
     def __init__(self, vocab_size, emb_dim, n_hidden, dropout):
-        super().__init__()
+        super(ConvSentEncoder, self).__init__()
         self._embedding = nn.Embedding(vocab_size, emb_dim, padding_idx=0)
         self._convs = nn.ModuleList([nn.Conv1d(emb_dim, n_hidden, i)
                                      for i in range(3, 6)])
@@ -24,11 +24,16 @@ class ConvSentEncoder(nn.Module):
         self._grad_handle = None
 
     def forward(self, input_):
+        print(input_.size())
         emb_input = self._embedding(input_)
-        conv_in = F.dropout(emb_input.transpose(1, 2),
-                            self._dropout, training=self.training)
-        output = torch.cat([F.relu(conv(conv_in)).max(dim=2)[0]
-                            for conv in self._convs], dim=1)
+        # N L C
+        # N C L
+        emb_input = emb_input.permute(0,2,1)
+        print(emb_input.size())
+        # conv_in = F.dropout(emb_input.transpose(1, 2),self._dropout, training=self.training)
+
+        output = torch.cat([F.relu(conv(emb_input)).max(dim=2)[0] for conv in self._convs], dim=1)
+        print(output.shape)
         return output
 
     def set_embedding(self, embedding):
@@ -39,7 +44,7 @@ class ConvSentEncoder(nn.Module):
 
 class LSTMEncoder(nn.Module):
     def __init__(self, input_dim, n_hidden, n_layer, dropout, bidirectional):
-        super().__init__()
+        super(LSTMEncoder, self).__init__()
         self._init_h = nn.Parameter(
             torch.Tensor(n_layer*(2 if bidirectional else 1), n_hidden))
         self._init_c = nn.Parameter(
@@ -273,11 +278,18 @@ class PtrExtractSumm(nn.Module):
         )
 
     def forward(self, article_sents, sent_nums, target):
+       # article_sents = article_sents.to(0)
+        target = target.to(0)
         enc_out = self._encode(article_sents, sent_nums)
         bs, nt = target.size()
         d = enc_out.size(2)
+
+        c=target.unsqueeze(2).expand(bs, nt, d).long()
+        print(c.type())
+
+        print (enc_out.shape)
         ptr_in = torch.gather(
-            enc_out, dim=1, index=target.unsqueeze(2).expand(bs, nt, d)
+            enc_out, dim=1, index=c
         )
         output = self._extractor(enc_out, sent_nums, ptr_in)
         return output
